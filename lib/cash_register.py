@@ -1,9 +1,7 @@
-#!/usr/bin/env python3
-
 class CashRegister:
     def __init__(self, discount=0):
-        self.discount = discount
         self.total = 0
+        self.discount = discount
         self.items = []
         self.previous_transactions = []
 
@@ -19,33 +17,45 @@ class CashRegister:
             print("Not valid discount")
             self._discount = 0
 
-    def add_item(self, item, price, quantity):
+    def add_item(self, title, price, quantity=1):
+        # update total
         self.total += price * quantity
-        self.items.append(item)
 
+        # add items (INCLUDING multiples)
+        for _ in range(quantity):
+            self.items.append(title)
+
+        # store transaction
         self.previous_transactions.append({
-            "item": item,
+            "item": title,
             "price": price,
             "quantity": quantity
         })
 
     def apply_discount(self):
-        if self.discount > 0:
-            self.total -= self.total * (self.discount / 100)
-        else:
-            print("There is no discount to apply.")
-
-    def void_last_transaction(self):
         if len(self.previous_transactions) == 0:
             print("There is no discount to apply.")
             return
 
-        last_transaction = self.previous_transactions.pop()
+        self.total -= self.total * (self.discount / 100)
+        print(f"After the discount, the total comes to {self.total}.")
 
-        self.total -= (
-            last_transaction["price"] *
-            last_transaction["quantity"]
-        )
+    def void_last_transaction(self):
+        if not self.previous_transactions:
+            print("There is no transaction to void.")
+            return
 
-        if last_transaction["item"] in self.items:
-            self.items.remove(last_transaction["item"])
+        last = self.previous_transactions.pop()
+
+        self.total -= last["price"] * last["quantity"]
+
+        # remove items one by one safely
+        for _ in range(last["quantity"]):
+            if last["item"] in self.items:
+                self.items.remove(last["item"])
+
+        if self.total < 0:
+            self.total = 0.0
+
+        if len(self.items) == 0:
+            self.total = 0.0
